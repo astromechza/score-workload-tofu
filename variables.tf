@@ -79,5 +79,4 @@ variable "service" {
 variable "namespace" {
   type        = string
   description = "The Kubernetes namespace to deploy the resources into."
-  default     = "default"
 }
