@@ -259,7 +259,7 @@ resource "kubernetes_deployment" "default" {
 }
 
 resource "kubernetes_service" "default" {
-  count = var.service != null ? 1 : 0
+  count = var.service != null && length(coalesce(var.service.ports, {})) > 0 ? 1 : 0
 
   metadata {
     name        = var.metadata.name
