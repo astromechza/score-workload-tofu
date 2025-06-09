@@ -228,6 +228,31 @@ resource "kubernetes_deployment" "default" {
   }
 }
 
+resource "kubernetes_service" "default" {
+  count = var.service != null ? 1 : 0
+
+  metadata {
+    name      = var.metadata["name"]
+    namespace = var.namespace
+    labels    = local.pod_labels
+  }
+
+  spec {
+    selector = local.pod_labels
+
+    dynamic "port" {
+      for_each = try(var.service.ports, {})
+      iterator = service_port
+      content {
+        name        = service_port.key
+        port        = service_port.value.port
+        target_port = try(service_port.value.targetPort, service_port.value.port)
+        protocol    = try(service_port.value.protocol, "TCP")
+      }
+    }
+  }
+}
+
 resource "kubernetes_stateful_set" "default" {
   count = local.workload_type == "StatefulSet" ? 1 : 0
 
