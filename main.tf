@@ -61,7 +61,8 @@ resource "kubernetes_secret" "env" {
   }
 
   metadata {
-    name = "${var.metadata["name"]}-${each.key}-env"
+    name      = "${var.metadata["name"]}-${each.key}-env"
+    namespace = var.namespace
   }
 
   data = each.value.variables
@@ -71,7 +72,8 @@ resource "kubernetes_secret" "files" {
   for_each = local.all_files_with_content
 
   metadata {
-    name = "${var.metadata["name"]}-${each.value.ckey}-${each.value.fkey}"
+    name      = "${var.metadata["name"]}-${each.value.ckey}-${each.value.fkey}"
+    namespace = var.namespace
   }
 
   data = {
@@ -86,6 +88,7 @@ resource "kubernetes_deployment" "default" {
     name        = var.metadata["name"]
     annotations = local.pod_annotations
     labels      = local.pod_labels
+    namespace   = var.namespace
   }
 
   spec {
@@ -232,6 +235,7 @@ resource "kubernetes_stateful_set" "default" {
     name        = var.metadata["name"]
     annotations = local.pod_annotations
     labels      = local.pod_labels
+    namespace   = var.namespace
   }
 
   spec {

@@ -75,3 +75,9 @@ variable "service" {
   })
   description = "The service section of the Score file."
 }
+
+variable "namespace" {
+  type        = string
+  description = "The Kubernetes namespace to deploy the resources into."
+  default     = "default"
+}
