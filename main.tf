@@ -156,12 +156,12 @@ resource "kubernetes_deployment" "default" {
             }
             resources {
               limits = {
-                cpu    = lookup(coalesce(container.value.resources, {}), "limits", {}).cpu
-                memory = lookup(coalesce(container.value.resources, {}), "limits", {}).memory
+                cpu    = lookup(lookup(coalesce(container.value.resources, {}), "limits", {}), "cpu", null)
+                memory = lookup(lookup(coalesce(container.value.resources, {}), "limits", {}), "memory", null)
               }
               requests = {
-                cpu    = lookup(coalesce(container.value.resources, {}), "requests", {}).cpu
-                memory = lookup(coalesce(container.value.resources, {}), "requests", {}).memory
+                cpu    = lookup(lookup(coalesce(container.value.resources, {}), "requests", {}), "cpu", null)
+                memory = lookup(lookup(coalesce(container.value.resources, {}), "requests", {}), "memory", null)
               }
             }
             dynamic "liveness_probe" {
@@ -342,12 +342,12 @@ resource "kubernetes_stateful_set" "default" {
             }
             resources {
               limits = {
-                cpu    = lookup(coalesce(container.value.resources, {}), "limits", {}).cpu
-                memory = lookup(coalesce(container.value.resources, {}), "limits", {}).memory
+                cpu    = lookup(lookup(coalesce(container.value.resources, {}), "limits", {}), "cpu", null)
+                memory = lookup(lookup(coalesce(container.value.resources, {}), "limits", {}), "memory", null)
               }
               requests = {
-                cpu    = lookup(coalesce(container.value.resources, {}), "requests", {}).cpu
-                memory = lookup(coalesce(container.value.resources, {}), "requests", {}).memory
+                cpu    = lookup(lookup(coalesce(container.value.resources, {}), "requests", {}), "cpu", null)
+                memory = lookup(lookup(coalesce(container.value.resources, {}), "requests", {}), "memory", null)
               }
             }
             dynamic "liveness_probe" {
