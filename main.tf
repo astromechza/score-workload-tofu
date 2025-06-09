@@ -42,7 +42,7 @@ locals {
   all_files_with_content = {
     for pair in flatten([
       for ckey, cval in var.containers : [
-        for fkey, fval in try(cval.files, {}) : {
+        for fkey, fval in coalesce(cval.files, {}) : {
           ckey      = ckey
           fkey      = fkey
           content   = try(fval.content, null)
@@ -58,7 +58,7 @@ locals {
   all_volumes = {
     for pair in flatten([
       for cval in var.containers : [
-        for vkey, vval in try(cval.volumes, {}) : {
+        for vkey, vval in coalesce(cval.volumes, {}) : {
           key   = vkey
           value = vval
         }
@@ -216,7 +216,7 @@ resource "kubernetes_deployment" "default" {
               }
             }
             dynamic "volume_mount" {
-              for_each = { for k, v in try(container.value.files, {}) : k => v if try(v.content, null) != null }
+              for_each = { for k, v in coalesce(container.value.files, {}) : k => v if try(v.content, null) != null }
               iterator = file
               content {
                 name       = "file-${container.key}-${file.key}"
@@ -225,7 +225,7 @@ resource "kubernetes_deployment" "default" {
               }
             }
             dynamic "volume_mount" {
-              for_each = try(container.value.volumes, {})
+              for_each = coalesce(container.value.volumes, {})
               iterator = volume
               content {
                 name       = "volume-${volume.key}"
@@ -272,7 +272,7 @@ resource "kubernetes_service" "default" {
     selector = local.pod_labels
 
     dynamic "port" {
-      for_each = try(var.service.ports, {})
+      for_each = coalesce(var.service.ports, {})
       iterator = service_port
       content {
         name        = service_port.key
@@ -399,7 +399,7 @@ resource "kubernetes_stateful_set" "default" {
               }
             }
             dynamic "volume_mount" {
-              for_each = { for k, v in try(container.value.files, {}) : k => v if try(v.content, null) != null }
+              for_each = { for k, v in coalesce(container.value.files, {}) : k => v if try(v.content, null) != null }
               iterator = file
               content {
                 name       = "file-${container.key}-${file.key}"
@@ -408,7 +408,7 @@ resource "kubernetes_stateful_set" "default" {
               }
             }
             dynamic "volume_mount" {
-              for_each = try(container.value.volumes, {})
+              for_each = coalesce(container.value.volumes, {})
               iterator = volume
               content {
                 name       = "volume-${volume.key}"
