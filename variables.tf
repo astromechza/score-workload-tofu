@@ -74,6 +74,7 @@ variable "service" {
     })))
   })
   description = "The service section of the Score file."
+  default     = null
 }
 
 variable "namespace" {

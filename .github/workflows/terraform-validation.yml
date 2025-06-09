@@ -25,3 +25,8 @@ jobs:
 
       - name: Terraform Validate
         run: terraform validate
+      - name: Validate examples
+        run: |
+          for d in examples/*/ ; do
+            (cd "$d" && terraform init -backend=false && terraform validate)
+          done
