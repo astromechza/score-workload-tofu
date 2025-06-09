@@ -160,7 +160,6 @@ resource "kubernetes_deployment" "default" {
             }
             security_context {
               allow_privilege_escalation = false
-              read_only_root_filesystem  = true
             }
             resources {
               limits = {
@@ -353,7 +352,6 @@ resource "kubernetes_stateful_set" "default" {
             }
             security_context {
               allow_privilege_escalation = false
-              read_only_root_filesystem  = true
             }
             resources {
               limits = {
