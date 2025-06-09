@@ -93,3 +93,9 @@ variable "additional_annotations" {
   description = "Additional annotations to add to all resources."
   default     = {}
 }
+
+variable "wait_for_rollout" {
+  type        = bool
+  description = "Whether to wait for the workload to be rolled out."
+  default     = true
+}

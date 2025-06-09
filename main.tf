@@ -115,7 +115,7 @@ resource "kubernetes_deployment" "default" {
     namespace   = var.namespace
   }
 
-  wait_for_rollout = true
+  wait_for_rollout = var.wait_for_rollout
   timeouts {
     create = "1m"
     update = "1m"
@@ -306,7 +306,7 @@ resource "kubernetes_stateful_set" "default" {
     namespace   = var.namespace
   }
 
-  wait_for_rollout = true
+  wait_for_rollout = var.wait_for_rollout
   timeouts {
     create = "1m"
     update = "1m"
