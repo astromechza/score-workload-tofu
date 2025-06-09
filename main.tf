@@ -156,12 +156,12 @@ resource "kubernetes_deployment" "default" {
             }
             resources {
               limits = {
-                cpu    = lookup(lookup(coalesce(container.value.resources, {}), "limits", {}), "cpu", null)
-                memory = lookup(lookup(coalesce(container.value.resources, {}), "limits", {}), "memory", null)
+                cpu    = try(container.value.resources.limits.cpu, null)
+                memory = try(container.value.resources.limits.memory, null)
               }
               requests = {
-                cpu    = lookup(lookup(coalesce(container.value.resources, {}), "requests", {}), "cpu", null)
-                memory = lookup(lookup(coalesce(container.value.resources, {}), "requests", {}), "memory", null)
+                cpu    = try(container.value.resources.requests.cpu, null)
+                memory = try(container.value.resources.requests.memory, null)
               }
             }
             dynamic "liveness_probe" {
@@ -342,12 +342,12 @@ resource "kubernetes_stateful_set" "default" {
             }
             resources {
               limits = {
-                cpu    = lookup(lookup(coalesce(container.value.resources, {}), "limits", {}), "cpu", null)
-                memory = lookup(lookup(coalesce(container.value.resources, {}), "limits", {}), "memory", null)
+                cpu    = try(container.value.resources.limits.cpu, null)
+                memory = try(container.value.resources.limits.memory, null)
               }
               requests = {
-                cpu    = lookup(lookup(coalesce(container.value.resources, {}), "requests", {}), "cpu", null)
-                memory = lookup(lookup(coalesce(container.value.resources, {}), "requests", {}), "memory", null)
+                cpu    = try(container.value.resources.requests.cpu, null)
+                memory = try(container.value.resources.requests.memory, null)
               }
             }
             dynamic "liveness_probe" {
