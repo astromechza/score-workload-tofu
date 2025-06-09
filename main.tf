@@ -37,6 +37,8 @@ locals {
     { "checksum/config" = sha256(local.stable_secret_json) }
   )
 
+  create_service = var.service != null && length(coalesce(var.service.ports, {})) > 0
+
   # Flatten files from all containers into a map for easier iteration.
   # We only care about files with inline content for creating secrets.
   all_files_with_content = {
@@ -259,7 +261,7 @@ resource "kubernetes_deployment" "default" {
 }
 
 resource "kubernetes_service" "default" {
-  count = var.service != null && length(coalesce(var.service.ports, {})) > 0 ? 1 : 0
+  count = local.create_service ? 1 : 0
 
   metadata {
     name        = var.metadata.name
