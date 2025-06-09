@@ -5,6 +5,11 @@ This is a Terraform / OpenTofu compatible module to be used to provision `score-
 ## Requirements
 
 1. There must be a module provider setup for `kubernetes` (`hashicorp/kubernetes`).
+2. There must be a resource type setup for `score-workload`, for example:
+
+    ```
+    canyon create resource-type score-workload --set=name=ScoreWorkload --set=output_schema='{"type":"object","properties":{}}'
+    ```
 
 ## Installation
 

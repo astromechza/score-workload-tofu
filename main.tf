@@ -1,5 +1,18 @@
+terraform {
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.0.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.0.0"
+    }
+  }
+}
+
 locals {
-  workload_type   = lookup(var.metadata["annotations"], "score.canyon.com/workload-type", "Deployment")
+  workload_type   = try(lookup(var.metadata, "annotations", {}), "score.canyon.com/workload-type", "Deployment")
   pod_labels      = { app = random_id.id.hex }
   # Create a map of all secret data, keyed by a stable identifier
   all_secret_data = merge(
@@ -36,7 +49,7 @@ locals {
           is_binary = try(fval.binaryContent, null) != null
           data      = try(fval.binaryContent, fval.content)
         } if try(fval.content, null) != null || try(fval.binaryContent, null) != null
-      ]
+      ] if cval != null
     ]) : "${pair.ckey}-${pair.fkey}" => pair
   }
 
@@ -49,7 +62,7 @@ locals {
           key   = vkey
           value = vval
         }
-      ]
+      ] if cval != null
     ]) : pair.key => pair.value
   }
 }
