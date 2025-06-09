@@ -12,7 +12,7 @@ terraform {
 }
 
 locals {
-  workload_type   = try(lookup(var.metadata, "annotations", {}), "score.canyon.com/workload-type", "Deployment")
+  workload_type   = lookup(coalesce(try(var.metadata.annotations, null), {}), "score.canyon.com/workload-type", "Deployment")
   pod_labels      = { app = random_id.id.hex }
   # Create a map of all secret data, keyed by a stable identifier
   all_secret_data = merge(
@@ -32,7 +32,7 @@ locals {
   ])
 
   pod_annotations = merge(
-    try(var.metadata["annotations"], {}),
+    coalesce(try(var.metadata.annotations, null), {}),
     var.additional_annotations,
     { "checksum/config" = sha256(local.stable_secret_json) }
   )
@@ -47,10 +47,10 @@ locals {
         for fkey, fval in coalesce(cval.files, {}) : {
           ckey      = ckey
           fkey      = fkey
-          content   = try(fval.content, null)
-          is_binary = try(fval.binaryContent, null) != null
-          data      = try(fval.binaryContent, fval.content)
-        } if try(fval.content, null) != null || try(fval.binaryContent, null) != null
+          content   = lookup(fval, "content", null)
+          is_binary = lookup(fval, "binaryContent", null) != null
+          data      = coalesce(lookup(fval, "binaryContent", null), lookup(fval, "content", null))
+        } if lookup(fval, "content", null) != null || lookup(fval, "binaryContent", null) != null
       ] if cval != null
     ]) : "${pair.ckey}-${sha256(pair.fkey)}" => pair
   }
@@ -156,12 +156,12 @@ resource "kubernetes_deployment" "default" {
             }
             resources {
               limits = {
-                cpu    = try(container.value.resources.limits.cpu, null)
-                memory = try(container.value.resources.limits.memory, null)
+                cpu    = lookup(coalesce(container.value.resources, {}), "limits", {}).cpu
+                memory = lookup(coalesce(container.value.resources, {}), "limits", {}).memory
               }
               requests = {
-                cpu    = try(container.value.resources.requests.cpu, null)
-                memory = try(container.value.resources.requests.memory, null)
+                cpu    = lookup(coalesce(container.value.resources, {}), "requests", {}).cpu
+                memory = lookup(coalesce(container.value.resources, {}), "requests", {}).memory
               }
             }
             dynamic "liveness_probe" {
@@ -172,10 +172,10 @@ resource "kubernetes_deployment" "default" {
                   content {
                     path   = container.value.livenessProbe.httpGet.path
                     port   = container.value.livenessProbe.httpGet.port
-                    host   = try(container.value.livenessProbe.httpGet.host, null)
-                    scheme = try(container.value.livenessProbe.httpGet.scheme, null)
+                    host   = lookup(container.value.livenessProbe.httpGet, "host", null)
+                    scheme = lookup(container.value.livenessProbe.httpGet, "scheme", null)
                     dynamic "http_header" {
-                      for_each = try(container.value.livenessProbe.httpGet.httpHeaders, [])
+                      for_each = coalesce(container.value.livenessProbe.httpGet.httpHeaders, [])
                       iterator = header
                       content {
                         name  = header.value.name
@@ -200,10 +200,10 @@ resource "kubernetes_deployment" "default" {
                   content {
                     path   = container.value.readinessProbe.httpGet.path
                     port   = container.value.readinessProbe.httpGet.port
-                    host   = try(container.value.readinessProbe.httpGet.host, null)
-                    scheme = try(container.value.readinessProbe.httpGet.scheme, null)
+                    host   = lookup(container.value.readinessProbe.httpGet, "host", null)
+                    scheme = lookup(container.value.readinessProbe.httpGet, "scheme", null)
                     dynamic "http_header" {
-                      for_each = try(container.value.readinessProbe.httpGet.httpHeaders, [])
+                      for_each = coalesce(container.value.readinessProbe.httpGet.httpHeaders, [])
                       iterator = header
                       content {
                         name  = header.value.name
@@ -221,7 +221,7 @@ resource "kubernetes_deployment" "default" {
               }
             }
             dynamic "volume_mount" {
-              for_each = { for k, v in coalesce(container.value.files, {}) : k => v if try(v.content, null) != null }
+              for_each = { for k, v in coalesce(container.value.files, {}) : k => v if lookup(v, "content", null) != null }
               iterator = file
               content {
                 name       = "file-${container.key}-${sha256(file.key)}"
@@ -235,7 +235,7 @@ resource "kubernetes_deployment" "default" {
               content {
                 name       = "volume-${volume.key}"
                 mount_path = volume.key
-                read_only  = try(volume.value.readOnly, false)
+                read_only  = coalesce(volume.value.readOnly, false)
               }
             }
           }
@@ -282,8 +282,8 @@ resource "kubernetes_service" "default" {
       content {
         name        = service_port.key
         port        = service_port.value.port
-        target_port = try(service_port.value.targetPort, service_port.value.port)
-        protocol    = try(service_port.value.protocol, "TCP")
+        target_port = coalesce(service_port.value.targetPort, service_port.value.port)
+        protocol    = coalesce(service_port.value.protocol, "TCP")
       }
     }
   }
@@ -342,12 +342,12 @@ resource "kubernetes_stateful_set" "default" {
             }
             resources {
               limits = {
-                cpu    = try(container.value.resources.limits.cpu, null)
-                memory = try(container.value.resources.limits.memory, null)
+                cpu    = lookup(coalesce(container.value.resources, {}), "limits", {}).cpu
+                memory = lookup(coalesce(container.value.resources, {}), "limits", {}).memory
               }
               requests = {
-                cpu    = try(container.value.resources.requests.cpu, null)
-                memory = try(container.value.resources.requests.memory, null)
+                cpu    = lookup(coalesce(container.value.resources, {}), "requests", {}).cpu
+                memory = lookup(coalesce(container.value.resources, {}), "requests", {}).memory
               }
             }
             dynamic "liveness_probe" {
@@ -358,10 +358,10 @@ resource "kubernetes_stateful_set" "default" {
                   content {
                     path   = container.value.livenessProbe.httpGet.path
                     port   = container.value.livenessProbe.httpGet.port
-                    host   = try(container.value.livenessProbe.httpGet.host, null)
-                    scheme = try(container.value.livenessProbe.httpGet.scheme, null)
+                    host   = lookup(container.value.livenessProbe.httpGet, "host", null)
+                    scheme = lookup(container.value.livenessProbe.httpGet, "scheme", null)
                     dynamic "http_header" {
-                      for_each = try(container.value.livenessProbe.httpGet.httpHeaders, [])
+                      for_each = coalesce(container.value.livenessProbe.httpGet.httpHeaders, [])
                       iterator = header
                       content {
                         name  = header.value.name
@@ -386,10 +386,10 @@ resource "kubernetes_stateful_set" "default" {
                   content {
                     path   = container.value.readinessProbe.httpGet.path
                     port   = container.value.readinessProbe.httpGet.port
-                    host   = try(container.value.readinessProbe.httpGet.host, null)
-                    scheme = try(container.value.readinessProbe.httpGet.scheme, null)
+                    host   = lookup(container.value.readinessProbe.httpGet, "host", null)
+                    scheme = lookup(container.value.readinessProbe.httpGet, "scheme", null)
                     dynamic "http_header" {
-                      for_each = try(container.value.readinessProbe.httpGet.httpHeaders, [])
+                      for_each = coalesce(container.value.readinessProbe.httpGet.httpHeaders, [])
                       iterator = header
                       content {
                         name  = header.value.name
@@ -407,7 +407,7 @@ resource "kubernetes_stateful_set" "default" {
               }
             }
             dynamic "volume_mount" {
-              for_each = { for k, v in coalesce(container.value.files, {}) : k => v if try(v.content, null) != null }
+              for_each = { for k, v in coalesce(container.value.files, {}) : k => v if lookup(v, "content", null) != null }
               iterator = file
               content {
                 name       = "file-${container.key}-${sha256(file.key)}"
@@ -421,7 +421,7 @@ resource "kubernetes_stateful_set" "default" {
               content {
                 name       = "volume-${volume.key}"
                 mount_path = volume.key
-                read_only  = try(volume.value.readOnly, false)
+                read_only  = coalesce(volume.value.readOnly, false)
               }
             }
           }
