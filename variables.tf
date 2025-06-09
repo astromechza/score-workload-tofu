@@ -1,5 +1,5 @@
 variable "metadata" {
-  type = map(any)
+  type        = any
   description = "The metadata section of the Score file."
 }
 

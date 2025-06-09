@@ -1,5 +1,5 @@
 locals {
-  workload_type   = lookup(var.metadata.annotations, "score.canyon.com/workload-type", "Deployment")
+  workload_type   = lookup(var.metadata["annotations"], "score.canyon.com/workload-type", "Deployment")
   pod_labels      = { app = random_id.id.hex }
   # Create a map of all secret data, keyed by a stable identifier
   all_secret_data = merge(
@@ -64,7 +64,7 @@ resource "kubernetes_secret" "env" {
   }
 
   metadata {
-    name        = "${var.metadata["name"]}-${each.key}-env"
+    name        = "${var.metadata.name}-${each.key}-env"
     namespace   = var.namespace
     annotations = var.additional_annotations
   }
@@ -76,7 +76,7 @@ resource "kubernetes_secret" "files" {
   for_each = local.all_files_with_content
 
   metadata {
-    name        = "${var.metadata["name"]}-${each.value.ckey}-${each.value.fkey}"
+    name        = "${var.metadata.name}-${each.value.ckey}-${each.value.fkey}"
     namespace   = var.namespace
     annotations = var.additional_annotations
   }
@@ -94,7 +94,7 @@ resource "kubernetes_deployment" "default" {
   count = local.workload_type == "Deployment" ? 1 : 0
 
   metadata {
-    name        = var.metadata["name"]
+    name        = var.metadata.name
     annotations = local.pod_annotations
     labels      = local.pod_labels
     namespace   = var.namespace
@@ -249,7 +249,7 @@ resource "kubernetes_service" "default" {
   count = var.service != null ? 1 : 0
 
   metadata {
-    name        = var.metadata["name"]
+    name        = var.metadata.name
     namespace   = var.namespace
     labels      = local.pod_labels
     annotations = var.additional_annotations
@@ -275,7 +275,7 @@ resource "kubernetes_stateful_set" "default" {
   count = local.workload_type == "StatefulSet" ? 1 : 0
 
   metadata {
-    name        = var.metadata["name"]
+    name        = var.metadata.name
     annotations = local.pod_annotations
     labels      = local.pod_labels
     namespace   = var.namespace
@@ -286,7 +286,7 @@ resource "kubernetes_stateful_set" "default" {
       match_labels = local.pod_labels
     }
 
-    service_name = var.metadata["name"]
+    service_name = var.metadata.name
 
     template {
       metadata {
