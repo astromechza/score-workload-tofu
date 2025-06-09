@@ -86,3 +86,9 @@ variable "service_account_name" {
   description = "The name of the service account to use for the pods."
   default     = null
 }
+
+variable "additional_annotations" {
+  type        = map(string)
+  description = "Additional annotations to add to all resources."
+  default     = {}
+}

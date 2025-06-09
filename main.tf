@@ -20,6 +20,7 @@ locals {
 
   pod_annotations = merge(
     try(var.metadata["annotations"], {}),
+    var.additional_annotations,
     { "checksum/config" = sha256(local.stable_secret_json) }
   )
 
@@ -63,8 +64,9 @@ resource "kubernetes_secret" "env" {
   }
 
   metadata {
-    name      = "${var.metadata["name"]}-${each.key}-env"
-    namespace = var.namespace
+    name        = "${var.metadata["name"]}-${each.key}-env"
+    namespace   = var.namespace
+    annotations = var.additional_annotations
   }
 
   data = each.value.variables
@@ -74,8 +76,9 @@ resource "kubernetes_secret" "files" {
   for_each = local.all_files_with_content
 
   metadata {
-    name      = "${var.metadata["name"]}-${each.value.ckey}-${each.value.fkey}"
-    namespace = var.namespace
+    name        = "${var.metadata["name"]}-${each.value.ckey}-${each.value.fkey}"
+    namespace   = var.namespace
+    annotations = var.additional_annotations
   }
 
   data = {
@@ -246,9 +249,10 @@ resource "kubernetes_service" "default" {
   count = var.service != null ? 1 : 0
 
   metadata {
-    name      = var.metadata["name"]
-    namespace = var.namespace
-    labels    = local.pod_labels
+    name        = var.metadata["name"]
+    namespace   = var.namespace
+    labels      = local.pod_labels
+    annotations = var.additional_annotations
   }
 
   spec {
