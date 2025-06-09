@@ -80,3 +80,9 @@ variable "namespace" {
   type        = string
   description = "The Kubernetes namespace to deploy the resources into."
 }
+
+variable "service_account_name" {
+  type        = string
+  description = "The name of the service account to use for the pods."
+  default     = null
+}

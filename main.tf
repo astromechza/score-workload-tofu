@@ -1,5 +1,5 @@
 locals {
-  workload_type   = lookup(var.metadata, "workload.type", "Deployment")
+  workload_type   = lookup(var.metadata.annotations, "score.canyon.com/workload-type", "Deployment")
   pod_labels      = { app = random_id.id.hex }
   # Create a map of all secret data, keyed by a stable identifier
   all_secret_data = merge(
@@ -29,10 +29,12 @@ locals {
     for pair in flatten([
       for ckey, cval in var.containers : [
         for fkey, fval in try(cval.files, {}) : {
-          ckey         = ckey
-          fkey         = fkey
-          file_content = fval.content
-        } if try(fval.content, null) != null
+          ckey      = ckey
+          fkey      = fkey
+          content   = try(fval.content, null)
+          is_binary = try(fval.binaryContent, null) != null
+          data      = try(fval.binaryContent, fval.content)
+        } if try(fval.content, null) != null || try(fval.binaryContent, null) != null
       ]
     ]) : "${pair.ckey}-${pair.fkey}" => pair
   }
@@ -77,7 +79,11 @@ resource "kubernetes_secret" "files" {
   }
 
   data = {
-    (each.value.fkey) = each.value.file_content
+    for k, v in { (each.value.fkey) = each.value.data } : k => v if !each.value.is_binary
+  }
+
+  binary_data = {
+    for k, v in { (each.value.fkey) = each.value.data } : k => v if each.value.is_binary
   }
 }
 
@@ -103,6 +109,10 @@ resource "kubernetes_deployment" "default" {
       }
 
       spec {
+        service_account_name = var.service_account_name
+        security_context {
+          run_as_non_root = true
+        }
         dynamic "container" {
           for_each = var.containers
           iterator = container
@@ -118,6 +128,10 @@ resource "kubernetes_deployment" "default" {
                   name = kubernetes_secret.env[container.key].metadata[0].name
                 }
               }
+            }
+            security_context {
+              allow_privilege_escalation = false
+              read_only_root_filesystem  = true
             }
             resources {
               limits = {
@@ -277,6 +291,10 @@ resource "kubernetes_stateful_set" "default" {
       }
 
       spec {
+        service_account_name = var.service_account_name
+        security_context {
+          run_as_non_root = true
+        }
         dynamic "container" {
           for_each = var.containers
           iterator = container
@@ -292,6 +310,10 @@ resource "kubernetes_stateful_set" "default" {
                   name = kubernetes_secret.env[container.key].metadata[0].name
                 }
               }
+            }
+            security_context {
+              allow_privilege_escalation = false
+              read_only_root_filesystem  = true
             }
             resources {
               limits = {
