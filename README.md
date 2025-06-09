@@ -8,7 +8,7 @@ This is a Terraform / OpenTofu compatible module to be used to provision `score-
 2. There must be a resource type setup for `score-workload`, for example:
 
     ```
-    canyon create resource-type score-workload --set=name=ScoreWorkload --set=output_schema='{"type":"object","properties":{}}'
+    canyon create resource-type score-workload --set=name='Score Workload' --set=output_schema='{"type":"object","properties":{}}'
     ```
 
 ## Installation
@@ -23,7 +23,26 @@ canyon create module-definition \
     --set=module_inputs='{"namespace": "CHANGEME"}'
 ```
 
-**Dynamic namespaces**
+## Module Inputs
+
+The following input variables can be set in the `module_inputs` of the `canyon create module-definition` command.
+
+| Name                     | Description                                           | Type       | Default | Required |
+| ------------------------ | ----------------------------------------------------- | ---------- | ------- | -------- |
+| `namespace`              | The namespace to deploy to.                           | `string`   |         | yes      |
+| `service_account_name`   | The name of the service account to use for the pods.  | `string`   | `null`  | no       |
+| `additional_annotations` | Additional annotations to add to all resources.       | `map(string)` | `{}`    | no       |
+| `wait_for_rollout`       | Whether to wait for the workload to be rolled out.    | `bool`     | `true`  | no       |
+
+For example, to set the `service_account_name` and disable `wait_for_rollout`, you would use:
+
+```shell
+canyon create module-definition \
+    ...
+    --set=module_inputs='{"namespace": "my-namespace", "service_account_name": "my-sa", "wait_for_rollout": false}'
+```
+
+### Dynamic namespaces
 
 Instead of a hardcoded destination namespace, you can use the resource graph to provision a namespace.
 
