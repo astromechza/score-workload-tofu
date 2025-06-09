@@ -130,6 +130,9 @@ resource "kubernetes_deployment" "default" {
         service_account_name = var.service_account_name
         security_context {
           run_as_non_root = true
+          seccomp_profile {
+            type = "RuntimeDefault"
+          }
         }
         dynamic "container" {
           for_each = var.containers
@@ -313,6 +316,9 @@ resource "kubernetes_stateful_set" "default" {
         service_account_name = var.service_account_name
         security_context {
           run_as_non_root = true
+          seccomp_profile {
+            type = "RuntimeDefault"
+          }
         }
         dynamic "container" {
           for_each = var.containers
