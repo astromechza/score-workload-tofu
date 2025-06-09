@@ -115,7 +115,15 @@ resource "kubernetes_deployment" "default" {
     namespace   = var.namespace
   }
 
+  wait_for_rollout = true
+  timeouts {
+    create = "1m"
+    update = "1m"
+    delete = "1m"
+  }
+
   spec {
+
     selector {
       match_labels = local.pod_labels
     }
@@ -297,6 +305,13 @@ resource "kubernetes_stateful_set" "default" {
     annotations = local.pod_annotations
     labels      = local.pod_labels
     namespace   = var.namespace
+  }
+
+  wait_for_rollout = true
+  timeouts {
+    create = "1m"
+    update = "1m"
+    delete = "1m"
   }
 
   spec {
