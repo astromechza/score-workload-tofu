@@ -52,7 +52,7 @@ locals {
           data      = try(fval.binaryContent, fval.content)
         } if try(fval.content, null) != null || try(fval.binaryContent, null) != null
       ] if cval != null
-    ]) : "${pair.ckey}-${pair.fkey}" => pair
+    ]) : "${pair.ckey}-${sha256(pair.fkey)}" => pair
   }
 
   # Flatten all external volumes from all containers into a single map,
@@ -91,7 +91,7 @@ resource "kubernetes_secret" "files" {
   for_each = local.all_files_with_content
 
   metadata {
-    name        = "${var.metadata.name}-${each.value.ckey}-${each.value.fkey}"
+    name        = "${var.metadata.name}-${each.key}"
     namespace   = var.namespace
     annotations = var.additional_annotations
   }
@@ -224,7 +224,7 @@ resource "kubernetes_deployment" "default" {
               for_each = { for k, v in coalesce(container.value.files, {}) : k => v if try(v.content, null) != null }
               iterator = file
               content {
-                name       = "file-${container.key}-${file.key}"
+                name       = "file-${container.key}-${sha256(file.key)}"
                 mount_path = file.key
                 read_only  = true
               }
@@ -241,11 +241,11 @@ resource "kubernetes_deployment" "default" {
           }
         }
         dynamic "volume" {
-          for_each = kubernetes_secret.files
+          for_each = local.all_files_with_content
           content {
-            name = "file-${volume.key}"
+            name = "file-${each.key}"
             secret {
-              secret_name = volume.value.metadata[0].name
+              secret_name = kubernetes_secret.files[each.key].metadata[0].name
             }
           }
         }
@@ -410,7 +410,7 @@ resource "kubernetes_stateful_set" "default" {
               for_each = { for k, v in coalesce(container.value.files, {}) : k => v if try(v.content, null) != null }
               iterator = file
               content {
-                name       = "file-${container.key}-${file.key}"
+                name       = "file-${container.key}-${sha256(file.key)}"
                 mount_path = file.key
                 read_only  = true
               }
@@ -427,11 +427,11 @@ resource "kubernetes_stateful_set" "default" {
           }
         }
         dynamic "volume" {
-          for_each = kubernetes_secret.files
+          for_each = local.all_files_with_content
           content {
-            name = "file-${volume.key}"
+            name = "file-${each.key}"
             secret {
-              secret_name = volume.value.metadata[0].name
+              secret_name = kubernetes_secret.files[each.key].metadata[0].name
             }
           }
         }
