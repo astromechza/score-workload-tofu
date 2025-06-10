@@ -47,7 +47,6 @@ locals {
         for fkey, fval in coalesce(cval.files, {}) : {
           ckey      = ckey
           fkey      = fkey
-          content   = lookup(fval, "content", null)
           is_binary = lookup(fval, "binaryContent", null) != null
           data      = coalesce(lookup(fval, "binaryContent", null), lookup(fval, "content", null))
         } if lookup(fval, "content", null) != null || lookup(fval, "binaryContent", null) != null
@@ -97,11 +96,11 @@ resource "kubernetes_secret" "files" {
   }
 
   data = {
-    for k, v in { (each.key) = each.value.data } : k => v if !each.value.is_binary
+    for k, v in { content = each.value.data } : k => v if !each.value.is_binary
   }
 
   binary_data = {
-    for k, v in { (each.key) = each.value.data } : k => v if each.value.is_binary
+    for k, v in { content = each.value.data } : k => v if each.value.is_binary
   }
 }
 
@@ -232,7 +231,7 @@ resource "kubernetes_deployment" "default" {
               iterator = file
               content {
                 name       = "file-${container.key}-${sha256(file.key)}"
-                mount_path = file.key
+                mount_path = dirname(file.fkey)
                 read_only  = true
               }
             }
@@ -255,8 +254,8 @@ resource "kubernetes_deployment" "default" {
             secret {
               secret_name = kubernetes_secret.files[file.key].metadata[0].name
               items {
-                key  = file.key
-                path = file.value.fkey
+                key  = content
+                path = basename(file.value.fkey)
               }
             }
           }
@@ -430,7 +429,7 @@ resource "kubernetes_stateful_set" "default" {
               iterator = file
               content {
                 name       = "file-${container.key}-${sha256(file.key)}"
-                mount_path = file.key
+                mount_path = dirname(file.key)
                 read_only  = true
               }
             }
@@ -453,8 +452,8 @@ resource "kubernetes_stateful_set" "default" {
             secret {
               secret_name = kubernetes_secret.files[file.key].metadata[0].name
               items {
-                key  = file.key
-                path = file.value.fkey
+                key  = content
+                path = basename(file.value.fkey)
               }
             }
           }
