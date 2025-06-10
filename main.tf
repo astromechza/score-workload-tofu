@@ -51,7 +51,7 @@ locals {
           data      = coalesce(lookup(fval, "binaryContent", null), lookup(fval, "content", null))
         } if lookup(fval, "content", null) != null || lookup(fval, "binaryContent", null) != null
       ] if cval != null
-    ]) : "${pair.ckey}-${sha256(pair.fkey)}" => pair
+    ]) : "${pair.ckey}-${substr(sha256(pair.fkey), 0, 10)}" => pair
   }
 
   # Flatten all external volumes from all containers into a single map,
