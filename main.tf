@@ -256,7 +256,7 @@ resource "kubernetes_deployment" "default" {
               secret_name = kubernetes_secret.files[file.key].metadata[0].name
               items {
                 key  = file.key
-                path = file.fkey
+                path = file.value.fkey
               }
             }
           }
@@ -454,7 +454,7 @@ resource "kubernetes_stateful_set" "default" {
               secret_name = kubernetes_secret.files[file.key].metadata[0].name
               items {
                 key  = file.key
-                path = file.fkey
+                path = file.value.fkey
               }
             }
           }
