@@ -227,11 +227,11 @@ resource "kubernetes_deployment" "default" {
               }
             }
             dynamic "volume_mount" {
-              for_each = { for k, v in coalesce(container.value.files, {}) : k => v if lookup(v, "content", null) != null }
+              for_each = { for k, v in local.all_files_with_content : k => v if v.ckey == container.key }
               iterator = file
               content {
-                name       = "file-${container.key}-${sha256(file.key)}"
-                mount_path = dirname(file.fkey)
+                name       = "file-${file.key}"
+                mount_path = dirname(file.value.fkey)
                 read_only  = true
               }
             }
@@ -254,7 +254,7 @@ resource "kubernetes_deployment" "default" {
             secret {
               secret_name = kubernetes_secret.files[file.key].metadata[0].name
               items {
-                key  = content
+                key  = "content"
                 path = basename(file.value.fkey)
               }
             }
@@ -425,11 +425,11 @@ resource "kubernetes_stateful_set" "default" {
               }
             }
             dynamic "volume_mount" {
-              for_each = { for k, v in coalesce(container.value.files, {}) : k => v if lookup(v, "content", null) != null }
+              for_each = { for k, v in local.all_files_with_content : k => v if v.ckey == container.key }
               iterator = file
               content {
-                name       = "file-${container.key}-${sha256(file.key)}"
-                mount_path = dirname(file.key)
+                name       = "file-${file.key}"
+                mount_path = dirname(file.value.fkey)
                 read_only  = true
               }
             }
@@ -452,7 +452,7 @@ resource "kubernetes_stateful_set" "default" {
             secret {
               secret_name = kubernetes_secret.files[file.key].metadata[0].name
               items {
-                key  = content
+                key  = "content"
                 path = basename(file.value.fkey)
               }
             }
