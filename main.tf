@@ -249,15 +249,17 @@ resource "kubernetes_deployment" "default" {
         }
         dynamic "volume" {
           for_each = local.all_files_with_content
+          iterator = file
           content {
-            name = "file-${each.key}"
+            name = "file-${file.key}"
             secret {
-              secret_name = kubernetes_secret.files[each.key].metadata[0].name
+              secret_name = kubernetes_secret.files[file.key].metadata[0].name
             }
           }
         }
         dynamic "volume" {
           for_each = local.all_volumes
+          iterator = volume
           content {
             name = "volume-${volume.key}"
             persistent_volume_claim {
@@ -441,15 +443,17 @@ resource "kubernetes_stateful_set" "default" {
         }
         dynamic "volume" {
           for_each = local.all_files_with_content
+          iterator = file
           content {
-            name = "file-${each.key}"
+            name = "file-${file.key}"
             secret {
-              secret_name = kubernetes_secret.files[each.key].metadata[0].name
+              secret_name = kubernetes_secret.files[file.key].metadata[0].name
             }
           }
         }
         dynamic "volume" {
           for_each = local.all_volumes
+          iterator = volume
           content {
             name = "volume-${volume.key}"
             persistent_volume_claim {
