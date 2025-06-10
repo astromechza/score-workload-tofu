@@ -254,6 +254,10 @@ resource "kubernetes_deployment" "default" {
             name = "file-${file.key}"
             secret {
               secret_name = kubernetes_secret.files[file.key].metadata[0].name
+              items {
+                key  = file.key
+                path = file.fkey
+              }
             }
           }
         }
