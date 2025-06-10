@@ -26,6 +26,14 @@ module "score_workload" {
           memory = "256Mi"
         }
       }
+      files = {
+        "/mnt/test.txt" = {
+          content = "hello world"
+        }
+        "/etc/other.txt" = {
+          binaryContent = "Zml6emJ1enoK"
+        }
+      }
       livenessProbe = {
         httpGet = {
           path = "/"

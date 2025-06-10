@@ -97,11 +97,11 @@ resource "kubernetes_secret" "files" {
   }
 
   data = {
-    for k, v in { (each.value.fkey) = each.value.data } : k => v if !each.value.is_binary
+    for k, v in { (each.key) = each.value.data } : k => v if !each.value.is_binary
   }
 
   binary_data = {
-    for k, v in { (each.value.fkey) = each.value.data } : k => v if each.value.is_binary
+    for k, v in { (each.key) = each.value.data } : k => v if each.value.is_binary
   }
 }
 
@@ -448,6 +448,10 @@ resource "kubernetes_stateful_set" "default" {
             name = "file-${file.key}"
             secret {
               secret_name = kubernetes_secret.files[file.key].metadata[0].name
+              items {
+                key  = file.key
+                path = file.fkey
+              }
             }
           }
         }
